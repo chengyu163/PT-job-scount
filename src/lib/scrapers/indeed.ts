@@ -43,54 +43,13 @@ export async function scrapeIndeed(
     const salaryHtml = await fetchIndeedPage(`https://pt.indeed.com/cmp/${slug}/salaries`, context2);
     await context2.close();
 
-    // --- Parse main company page (ratings + review snippets) ---
+    // --- Parse main company page (company info only, NOT reviews as they are global) ---
     const $main = cheerio.load(mainHtml);
     const mainText = $main("body").text().replace(/\s+/g, " ");
 
-    // Overall rating (e.g. "3,9 em 5 estrelas")
-    const ratingMatch = mainText.match(/(\d[.,]\d)\s*em\s*5\s*estrelas/);
-    const overall = ratingMatch
-      ? parseFloat(ratingMatch[1].replace(",", ".")) * 2
-      : 0;
-
-    // Review count
-    const countMatch = mainText.match(/([\d.,]+)\s*Avaliações/);
-    const reviewCount = countMatch ? parseInt(countMatch[1].replace(/\./g, "")) : 0;
-
-    // CEO approval
+    // CEO approval (company-level, not region-specific)
     const ceoMatch = mainText.match(/(\d+)%\s*Taxa de aprovação/);
     const ceoApproval = ceoMatch ? parseInt(ceoMatch[1]) : 0;
-
-    // Extract review snippets from main page
-    const reviews: { text: string; rating: number; date: string; pros: string; cons: string }[] = [];
-    $main('[data-testid="reviews-section"]').find('[data-testid*="review"]').each((_, el) => {
-      const text = $main(el).text().trim().replace(/\s+/g, " ");
-      if (text.length > 30) {
-        const starMatch = text.match(/(\d[.,]\d)\s*em/);
-        const rating = starMatch ? parseFloat(starMatch[1].replace(",", ".")) * 2 : 0;
-        reviews.push({
-          text: text.substring(0, 500),
-          rating,
-          date: "",
-          pros: "",
-          cons: "",
-        });
-      }
-    });
-
-    // Also grab any review-like text blocks
-    if (reviews.length === 0) {
-      const reviewSection = $main('[data-testid="reviews-section"]').text().trim().replace(/\s+/g, " ");
-      if (reviewSection.length > 50) {
-        reviews.push({
-          text: reviewSection.substring(0, 800),
-          rating: overall,
-          date: "",
-          pros: "",
-          cons: "",
-        });
-      }
-    }
 
     // --- Parse salary page ---
     const $sal = cheerio.load(salaryHtml);
@@ -135,10 +94,6 @@ export async function scrapeIndeed(
     return {
       source: "indeed",
       sector: "all",
-      ratings: overall > 0
-        ? { overall, culture: 0, salary: 0 }
-        : undefined,
-      reviews,
       salaries,
       jobs: jobs.slice(0, 10),
       companyInfo: {

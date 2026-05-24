@@ -4,6 +4,7 @@ import { scrapeGlassdoor } from "./glassdoor";
 import { scrapeLinkedIn } from "./linkedin";
 import { scrapeItjobs } from "./itjobs";
 import { scrapeIndeed } from "./indeed";
+import { scrapeLanding } from "./landing";
 import { closeBrowser } from "./browser";
 
 export async function aggregateData(
@@ -15,6 +16,7 @@ export async function aggregateData(
     { name: "linkedin", fn: () => scrapeLinkedIn(companyName) },
     { name: "itjobs", fn: () => scrapeItjobs(companyName) },
     { name: "indeed", fn: () => scrapeIndeed(companyName) },
+    { name: "landing.jobs", fn: () => scrapeLanding(companyName) },
   ];
 
   const results = await Promise.allSettled(scrapers.map((s) => s.fn()));
