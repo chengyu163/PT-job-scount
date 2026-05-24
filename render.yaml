@@ -9,7 +9,7 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: TEAMLYZER_SESSION
+      - key: TEAMLYZER_EMAIL
         sync: false
-      - key: TEAMLYZER_REMEMBER
+      - key: TEAMLYZER_PASSWORD
         sync: false

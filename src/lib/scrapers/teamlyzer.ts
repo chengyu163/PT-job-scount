@@ -8,7 +8,12 @@ function randomDelay(): number {
   return 2000 + Math.floor(Math.random() * 3000);
 }
 
-async function fetchPage(url: string): Promise<string> {
+import type { BrowserContext } from "playwright";
+let loggedInContext: BrowserContext | null = null;
+
+async function getLoggedInContext(): Promise<BrowserContext> {
+  if (loggedInContext) return loggedInContext;
+
   const browser = await getBrowser();
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
@@ -16,34 +21,37 @@ async function fetchPage(url: string): Promise<string> {
     timezoneId: "Europe/Lisbon",
   });
 
-  if (process.env.TEAMLYZER_SESSION || process.env.TEAMLYZER_REMEMBER) {
-    const cookies = [];
-    if (process.env.TEAMLYZER_SESSION) {
-      cookies.push({
-        name: "session",
-        value: process.env.TEAMLYZER_SESSION,
-        domain: ".teamlyzer.com",
-        path: "/",
-      });
+  const email = process.env.TEAMLYZER_EMAIL;
+  const password = process.env.TEAMLYZER_PASSWORD;
+
+  if (email && password) {
+    try {
+      const page = await context.newPage();
+      await page.goto(`${BASE_URL}/login`, { waitUntil: "domcontentloaded", timeout: 20000 });
+      await page.waitForTimeout(randomDelay());
+      await page.fill('input[name="email"], input[type="email"]', email);
+      await page.fill('input[name="password"], input[type="password"]', password);
+      await page.click('button[type="submit"], input[type="submit"]');
+      await page.waitForTimeout(4000);
+      console.log("[teamlyzer] Logged in successfully");
+      await page.close();
+    } catch (e) {
+      console.error("[teamlyzer] Login failed:", e);
     }
-    if (process.env.TEAMLYZER_REMEMBER) {
-      cookies.push({
-        name: "remember_token",
-        value: process.env.TEAMLYZER_REMEMBER,
-        domain: ".teamlyzer.com",
-        path: "/",
-      });
-    }
-    await context.addCookies(cookies);
   }
 
+  loggedInContext = context;
+  return context;
+}
+
+async function fetchPage(url: string): Promise<string> {
+  const context = await getLoggedInContext();
   const page = await context.newPage();
   await page.waitForTimeout(randomDelay());
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
   await page.waitForTimeout(randomDelay());
   const html = await page.content();
   await page.close();
-  await context.close();
   return html;
 }
 
@@ -317,5 +325,10 @@ export async function scrapeTeamlyzer(
   } catch (error) {
     console.error("Teamlyzer scrape failed:", error);
     return { source: "teamlyzer", sector: "it" };
+  } finally {
+    if (loggedInContext) {
+      try { await loggedInContext.close(); } catch {}
+      loggedInContext = null;
+    }
   }
 }
