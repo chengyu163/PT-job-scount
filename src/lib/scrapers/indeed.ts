@@ -51,8 +51,11 @@ export async function scrapeIndeed(
       const titleEl = $sal(el).find('[data-testid*="card-title"], [data-testid*="compareLink"]');
       const role = titleEl.text().trim() || text.split(/\d/)[0].trim();
 
+      const excludeSalaryRoles = ["Empregado de Mesa", "Cozinheiro", "Rececionista", "Porteiro", "Limpeza", "Segurança", "Barman", "Camareiro"];
+      const isExcludedRole = excludeSalaryRoles.some((r) => role.includes(r));
+
       const salaryMatch = text.match(/([\d\s.,]+)\s*€\s*por\s*ano/);
-      if (salaryMatch && role) {
+      if (salaryMatch && role && !isExcludedRole) {
         const annual = parseInt(salaryMatch[1].replace(/[\s.]/g, ""));
         if (annual > 0) {
           salaries.push({
@@ -103,7 +106,9 @@ export async function scrapeIndeed(
     const reviews: { text: string; rating: number; date: string; pros: string; cons: string }[] = [];
     $rev('[data-testid="review-text"]').each((_, el) => {
       const text = $rev(el).text().trim().replace(/\s+/g, " ");
-      if (text.length > 10 && !text.includes("Empregado de Mesa")) {
+      const excludeRoles = ["Empregado de Mesa", "Cozinheiro", "Rececionista", "Porteiro", "Limpeza", "Segurança"];
+      const isExcluded = excludeRoles.some((r) => text.includes(r));
+      if (text.length > 10 && !isExcluded) {
         reviews.push({ text: text.substring(0, 500), rating: overall, date: "", pros: "", cons: "" });
       }
     });
