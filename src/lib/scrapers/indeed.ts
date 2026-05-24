@@ -2,22 +2,6 @@ import * as cheerio from "cheerio";
 import { getBrowser } from "./browser";
 import { ScrapedData } from "../types";
 
-async function fetchIndeedPage(url: string, context: Awaited<ReturnType<Awaited<ReturnType<typeof getBrowser>>["newContext"]>>): Promise<string> {
-  const page = await context.newPage();
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
-  await page.waitForTimeout(3000);
-
-  const acceptBtn = await page.$("button#onetrust-accept-btn-handler");
-  if (acceptBtn) {
-    await acceptBtn.click();
-    await page.waitForTimeout(2000);
-  }
-
-  const html = await page.content();
-  await page.close();
-  return html;
-}
-
 export async function scrapeIndeed(
   companyName: string
 ): Promise<ScrapedData> {
@@ -31,25 +15,32 @@ export async function scrapeIndeed(
 
     const slug = companyName.toLowerCase().replace(/\s+/g, "-");
 
-    // Fetch main page and salary page with separate contexts to avoid blocks
-    const mainHtml = await fetchIndeedPage(`https://pt.indeed.com/cmp/${slug}`, context);
-    await context.close();
+    // Use a single page, navigate sequentially
+    const page = await context.newPage();
 
-    const context2 = await browser.newContext({
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-      locale: "pt-PT",
-      timezoneId: "Europe/Lisbon",
+    // 1. Salary page first (most reliable)
+    await page.goto(`https://pt.indeed.com/cmp/${slug}/salaries`, {
+      waitUntil: "domcontentloaded",
+      timeout: 20000,
     });
-    const salaryHtml = await fetchIndeedPage(`https://pt.indeed.com/cmp/${slug}/salaries`, context2);
-    await context2.close();
+    await page.waitForTimeout(3000);
+    const acceptBtn = await page.$("button#onetrust-accept-btn-handler");
+    if (acceptBtn) {
+      await acceptBtn.click();
+      await page.waitForTimeout(1500);
+    }
+    const salaryHtml = await page.content();
 
-    // --- Parse main company page (company info only, NOT reviews as they are global) ---
-    const $main = cheerio.load(mainHtml);
-    const mainText = $main("body").text().replace(/\s+/g, " ");
+    // 2. Navigate to PT-filtered reviews
+    await page.goto(`https://pt.indeed.com/cmp/${slug}/reviews?fcountry=PT`, {
+      waitUntil: "domcontentloaded",
+      timeout: 20000,
+    });
+    await page.waitForTimeout(3000);
+    const reviewHtml = await page.content();
 
-    // CEO approval (company-level, not region-specific)
-    const ceoMatch = mainText.match(/(\d+)%\s*Taxa de aprovação/);
-    const ceoApproval = ceoMatch ? parseInt(ceoMatch[1]) : 0;
+    await page.close();
+    await context.close();
 
     // --- Parse salary page ---
     const $sal = cheerio.load(salaryHtml);
@@ -75,7 +66,7 @@ export async function scrapeIndeed(
       }
     });
 
-    // Extract job listings
+    // Extract jobs from salary page
     const jobs: { title: string; department: string; remote: boolean; url: string }[] = [];
     $sal('[data-testid*="salary-popular-job-card"]').each((_, el) => {
       const text = $sal(el).text().trim();
@@ -91,20 +82,51 @@ export async function scrapeIndeed(
       }
     });
 
+    // --- Parse PT-filtered reviews ---
+    const $rev = cheerio.load(reviewHtml);
+    const revText = $rev("body").text().replace(/\s+/g, " ");
+
+    // Extract PT-specific ratings
+    const overallMatch = revText.match(/Avaliação geral([\d,]+)/);
+    const wlbMatch = revText.match(/([\d,]+)\s*em 5 estrelas para Equilíbrio/);
+    const salRatingMatch = revText.match(/([\d,]+)\s*em 5 estrelas para Salário/);
+    const careerMatch = revText.match(/([\d,]+)\s*em 5 estrelas para Estabilidade/);
+    const mgmtMatch = revText.match(/([\d,]+)\s*em 5 estrelas para Direção/);
+    const cultureMatch = revText.match(/([\d,]+)\s*em 5 estrelas para Cultura/);
+
+    const overall = overallMatch ? parseFloat(overallMatch[1].replace(",", ".")) * 2 : 0;
+    const wlb = wlbMatch ? parseFloat(wlbMatch[1].replace(",", ".")) * 2 : 0;
+    const culture = cultureMatch ? parseFloat(cultureMatch[1].replace(",", ".")) * 2 : 0;
+    const salary = salRatingMatch ? parseFloat(salRatingMatch[1].replace(",", ".")) * 2 : 0;
+
+    // Extract PT-only reviews
+    const reviews: { text: string; rating: number; date: string; pros: string; cons: string }[] = [];
+    $rev('[data-testid="review-text"]').each((_, el) => {
+      const text = $rev(el).text().trim().replace(/\s+/g, " ");
+      if (text.length > 10 && !text.includes("Empregado de Mesa")) {
+        reviews.push({ text: text.substring(0, 500), rating: overall, date: "", pros: "", cons: "" });
+      }
+    });
+
+    // Get review count for PT
+    const ptCountMatch = revText.match(/(\d+)\s*avaliações/i);
+    const ptReviewCount = ptCountMatch ? parseInt(ptCountMatch[1]) : reviews.length;
+
     return {
-      source: "indeed",
+      source: "indeed (Portugal)",
       sector: "all",
+      ratings: overall > 0 ? { overall, culture, salary } : undefined,
+      reviews,
       salaries,
       jobs: jobs.slice(0, 10),
       companyInfo: {
         size: "",
         founded: "",
         industry: "",
-        ...(ceoApproval > 0 ? { capital: `CEO approval: ${ceoApproval}%` } : {}),
       },
     };
   } catch (error) {
     console.error("Indeed scrape failed:", error);
-    return { source: "indeed", sector: "all" };
+    return { source: "indeed (Portugal)", sector: "all" };
   }
 }
