@@ -2,6 +2,10 @@ import * as cheerio from "cheerio";
 import { getBrowser } from "./browser";
 import { ScrapedData } from "../types";
 
+function randomDelay(): number {
+  return 2000 + Math.floor(Math.random() * 3000);
+}
+
 export async function scrapeLanding(
   companyName: string
 ): Promise<ScrapedData> {
@@ -11,11 +15,12 @@ export async function scrapeLanding(
     const slug = companyName.toLowerCase().replace(/\s+/g, "-");
 
     // Try company page directly first
+    await page.waitForTimeout(randomDelay());
     await page.goto(`https://landing.jobs/at/${slug}`, {
       waitUntil: "domcontentloaded",
       timeout: 15000,
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(randomDelay());
 
     // Accept cookies if present
     const acceptBtn = await page.$('button:has-text("Accept All")');

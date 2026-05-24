@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: job-scout-portugal
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TEAMLYZER_SESSION
+        sync: false
+      - key: TEAMLYZER_REMEMBER
+        sync: false

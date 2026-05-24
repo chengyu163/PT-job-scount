@@ -2,6 +2,10 @@ import * as cheerio from "cheerio";
 import { getBrowser } from "./browser";
 import { ScrapedData } from "../types";
 
+function randomDelay(): number {
+  return 2000 + Math.floor(Math.random() * 3000);
+}
+
 export async function scrapeIndeed(
   companyName: string
 ): Promise<ScrapedData> {
@@ -19,11 +23,12 @@ export async function scrapeIndeed(
     const page = await context.newPage();
 
     // 1. Salary page first (most reliable)
+    await page.waitForTimeout(randomDelay());
     await page.goto(`https://pt.indeed.com/cmp/${slug}/salaries`, {
       waitUntil: "domcontentloaded",
       timeout: 20000,
     });
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(randomDelay());
     const acceptBtn = await page.$("button#onetrust-accept-btn-handler");
     if (acceptBtn) {
       await acceptBtn.click();
@@ -32,11 +37,12 @@ export async function scrapeIndeed(
     const salaryHtml = await page.content();
 
     // 2. Navigate to PT-filtered reviews
+    await page.waitForTimeout(randomDelay());
     await page.goto(`https://pt.indeed.com/cmp/${slug}/reviews?fcountry=PT`, {
       waitUntil: "domcontentloaded",
       timeout: 20000,
     });
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(randomDelay());
     const reviewHtml = await page.content();
 
     await page.close();

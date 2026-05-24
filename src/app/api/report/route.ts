@@ -22,19 +22,22 @@ export async function GET(request: NextRequest) {
   }
 
   const slug = slugify(companyName);
+  const force = request.nextUrl.searchParams.get("force") === "true";
 
   // Check database for recent report in this language
-  const existing = await prisma.report.findFirst({
-    where: {
-      company: { slug },
-      expiresAt: { gt: new Date() },
-      aiSummary: { startsWith: `[${lang}]` },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  if (!force) {
+    const existing = await prisma.report.findFirst({
+      where: {
+        company: { slug },
+        expiresAt: { gt: new Date() },
+        aiSummary: { startsWith: `[${lang}]` },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  if (existing) {
-    return NextResponse.json({ report: existing.fullReport, cached: true });
+    if (existing) {
+      return NextResponse.json({ report: existing.fullReport, cached: true });
+    }
   }
 
   // Scrape fresh data

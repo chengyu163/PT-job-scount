@@ -4,9 +4,17 @@ import { ScrapedData } from "../types";
 
 const BASE_URL = "https://pt.teamlyzer.com";
 
+function randomDelay(): number {
+  return 2000 + Math.floor(Math.random() * 3000);
+}
+
 async function fetchPage(url: string): Promise<string> {
   const browser = await getBrowser();
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    locale: "pt-PT",
+    timezoneId: "Europe/Lisbon",
+  });
 
   if (process.env.TEAMLYZER_SESSION || process.env.TEAMLYZER_REMEMBER) {
     const cookies = [];
@@ -30,8 +38,9 @@ async function fetchPage(url: string): Promise<string> {
   }
 
   const page = await context.newPage();
+  await page.waitForTimeout(randomDelay());
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(randomDelay());
   const html = await page.content();
   await page.close();
   await context.close();
