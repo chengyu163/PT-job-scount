@@ -1,9 +1,13 @@
 import { ScrapedData } from "../types";
+import { Locale, getAiLanguage } from "../i18n";
 
 export function buildAnalysisPrompt(
   companyName: string,
-  data: ScrapedData[]
+  data: ScrapedData[],
+  locale: Locale = "en"
 ): string {
+  const lang = getAiLanguage(locale);
+
   return `You are a career advisor specialized in the Portuguese job market, covering both IT/tech and business sectors (finance, consulting, marketing, HR, management).
 
 Analyze the following data about "${companyName}" and generate a structured report.
@@ -79,7 +83,7 @@ Rules:
 - Detect suspicious review patterns (many 5-star reviews in short period, generic language)
 - Foreigner-friendly assessment: extract from review text mentions of visa, English, international team, relocation
 - Salary ranges should be annual gross in EUR
-- Write summary and recommendation in English
+- IMPORTANT: Write ALL text content (summary, recommendation, redFlags issues, greenFlags, culture keywords, interview process, foreignerFriendly notes, reviewAuthenticity notes) in ${lang}
 - Score should reflect the overall picture, not just ratings
 - Return ONLY valid JSON, no markdown code fences`;
 }

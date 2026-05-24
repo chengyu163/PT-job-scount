@@ -6,18 +6,27 @@ import { CompanyReport } from "@/lib/types";
 import ReportCard from "@/components/ReportCard";
 import SkeletonReport from "@/components/SkeletonReport";
 import Link from "next/link";
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function CompanyPage() {
   const searchParams = useSearchParams();
   const companyName = searchParams.get("name") || "";
+  const langParam = searchParams.get("lang");
+  const { locale, setLocale, t } = useLocale();
 
   const [report, setReport] = useState<CompanyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (langParam && ["zh", "en", "pt"].includes(langParam)) {
+      setLocale(langParam as "zh" | "en" | "pt");
+    }
+  }, [langParam, setLocale]);
+
+  useEffect(() => {
     if (!companyName) {
-      setError("未提供公司名称");
+      setError(t("noCompany"));
       setLoading(false);
       return;
     }
@@ -25,25 +34,25 @@ export default function CompanyPage() {
     async function fetchReport() {
       try {
         const res = await fetch(
-          `/api/report?company=${encodeURIComponent(companyName)}`
+          `/api/report?company=${encodeURIComponent(companyName)}&lang=${locale}`
         );
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error || "报告生成失败");
+          setError(data.error || t("reportFailed"));
           return;
         }
 
         setReport(data.report);
       } catch {
-        setError("出现错误，请重试。");
+        setError(t("tryAgain"));
       } finally {
         setLoading(false);
       }
     }
 
     fetchReport();
-  }, [companyName]);
+  }, [companyName, locale]);
 
   if (loading) {
     return (
@@ -53,12 +62,12 @@ export default function CompanyPage() {
             href="/"
             className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
-            &larr; 返回搜索
+            &larr; {t("backToSearch")}
           </Link>
         </nav>
         <div className="py-8">
           <p className="mb-4 text-center text-sm text-zinc-500">
-            正在调查 {companyName}... 最多需要 30 秒
+            {t("loading")} {companyName}... {t("loadingNote")}
           </p>
           <SkeletonReport />
         </div>
@@ -70,14 +79,14 @@ export default function CompanyPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          无法生成报告
+          {t("errorTitle")}
         </h1>
         <p className="mt-2 text-zinc-500">{error}</p>
         <Link
           href="/"
           className="mt-6 rounded-full bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
         >
-          换一家公司试试
+          {t("tryAnother")}
         </Link>
       </div>
     );
@@ -92,7 +101,7 @@ export default function CompanyPage() {
           href="/"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          &larr; 返回搜索
+          &larr; {t("backToSearch")}
         </Link>
       </nav>
       <ReportCard companyName={companyName} report={report} />

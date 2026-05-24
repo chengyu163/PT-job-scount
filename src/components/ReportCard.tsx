@@ -5,6 +5,7 @@ import ScoreGauge from "./ScoreGauge";
 import SalaryRange from "./SalaryRange";
 import RedFlags from "./RedFlags";
 import ForeignerScore from "./ForeignerScore";
+import { useLocale } from "./LocaleProvider";
 
 interface ReportCardProps {
   companyName: string;
@@ -12,9 +13,10 @@ interface ReportCardProps {
 }
 
 export default function ReportCard({ companyName, report }: ReportCardProps) {
+  const { t } = useLocale();
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
-      {/* 头部 */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
           {companyName}
@@ -26,35 +28,27 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
           <p className="mt-1 text-sm text-zinc-500">
             {report.companyOverview.industry}
             {report.companyOverview.size &&
-              ` · ${report.companyOverview.size} 人`}
+              ` · ${report.companyOverview.size} ${t("people")}`}
             {report.companyOverview.founded &&
-              ` · 成立于 ${report.companyOverview.founded}`}
+              ` · ${t("foundedIn")} ${report.companyOverview.founded}`}
           </p>
         )}
       </div>
 
-      {/* 评分卡片 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <ScoreGauge score={report.overallScore} label="综合评分" />
+        <ScoreGauge score={report.overallScore} label={t("overallScore")} />
         {report.culture.workLifeBalance !== null && (
-          <ScoreGauge
-            score={report.culture.workLifeBalance}
-            label="工作生活平衡"
-          />
+          <ScoreGauge score={report.culture.workLifeBalance} label={t("workLifeBalance")} />
         )}
         {report.interview.difficulty !== null && (
-          <ScoreGauge
-            score={report.interview.difficulty}
-            label="面试难度"
-          />
+          <ScoreGauge score={report.interview.difficulty} label={t("interviewDifficulty")} />
         )}
       </div>
 
-      {/* 技术栈 */}
       {report.companyOverview.techStack?.length > 0 && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            技术栈
+            {t("techStack")}
           </h3>
           <div className="flex flex-wrap gap-2">
             {report.companyOverview.techStack?.map((tech) => (
@@ -69,21 +63,19 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* 薪资 */}
       <SalaryRange
         it={report.salary.it}
         business={report.salary.business}
         currency={report.salary.currency}
       />
 
-      {/* 工作文化 */}
       <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
         <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-          工作文化
+          {t("culture")}
         </h3>
         {report.culture.positiveKeywords?.length > 0 && (
           <div className="mb-3">
-            <p className="mb-1 text-sm text-zinc-500">正面评价</p>
+            <p className="mb-1 text-sm text-zinc-500">{t("positive")}</p>
             <div className="flex flex-wrap gap-2">
               {report.culture.positiveKeywords?.map((kw) => (
                 <span
@@ -98,7 +90,7 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         )}
         {report.culture.negativeKeywords?.length > 0 && (
           <div>
-            <p className="mb-1 text-sm text-zinc-500">负面评价</p>
+            <p className="mb-1 text-sm text-zinc-500">{t("negative")}</p>
             <div className="flex flex-wrap gap-2">
               {report.culture.negativeKeywords?.map((kw) => (
                 <span
@@ -113,21 +105,16 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         )}
       </div>
 
-      {/* 红旗 */}
       <RedFlags flags={report.redFlags} />
 
-      {/* 绿旗 */}
       {report.greenFlags?.length > 0 && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-900/20">
           <h3 className="mb-3 font-semibold text-green-800 dark:text-green-300">
-            加分项
+            {t("greenFlags")}
           </h3>
           <ul className="space-y-1">
             {report.greenFlags?.map((flag, i) => (
-              <li
-                key={i}
-                className="text-sm text-green-700 dark:text-green-400"
-              >
+              <li key={i} className="text-sm text-green-700 dark:text-green-400">
                 &#10003; {flag}
               </li>
             ))}
@@ -135,24 +122,23 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* 面试 */}
       {report.interview.process && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            面试流程
+            {t("interview")}
           </h3>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
             {report.interview.process}
           </p>
           {report.interview.avgDuration && (
             <p className="mt-2 text-sm text-zinc-500">
-              平均周期：{report.interview.avgDuration}
+              {t("avgDuration")}: {report.interview.avgDuration}
             </p>
           )}
           {report.interview.commonQuestions?.length > 0 && (
             <div className="mt-3">
               <p className="mb-1 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                常见面试问题
+                {t("commonQuestions")}
               </p>
               <ul className="list-inside list-disc space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {report.interview.commonQuestions?.map((q, i) => (
@@ -164,36 +150,33 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* 外国人友好度 */}
       {report.foreignerFriendly && (
         <ForeignerScore data={report.foreignerFriendly} />
       )}
 
-      {/* 评价可信度 */}
       {report.reviewAuthenticity && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-              评价可信度
+              {t("reviewAuth")}
             </h3>
             <span className="text-lg font-bold text-zinc-700 dark:text-zinc-300">
               {report.reviewAuthenticity.score}/10
             </span>
           </div>
           <p className="mt-2 text-sm text-zinc-500">
-            基于 {report.reviewAuthenticity.totalReviews} 条评价。
+            {t("basedOn")} {report.reviewAuthenticity.totalReviews} {t("reviews")}。
             {report.reviewAuthenticity.suspiciousPatterns
-              ? "检测到可疑刷评模式。"
-              : "未发现可疑模式。"}
+              ? t("suspiciousYes")
+              : t("suspiciousNo")}
             {report.reviewAuthenticity.notes}
           </p>
         </div>
       )}
 
-      {/* AI 建议 */}
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-6 dark:border-blue-900 dark:bg-blue-900/20">
         <h3 className="mb-2 font-semibold text-blue-800 dark:text-blue-300">
-          AI 综合建议
+          {t("aiRecommendation")}
         </h3>
         <p className="text-blue-900 dark:text-blue-200">
           {report.recommendation}

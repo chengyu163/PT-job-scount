@@ -1,50 +1,29 @@
+"use client";
+
 import { RedFlag } from "@/lib/types";
+import { useLocale } from "./LocaleProvider";
 
 interface RedFlagsProps {
   flags: RedFlag[];
 }
 
-const confidenceLabels = {
-  high: "高",
-  medium: "中",
-  low: "低",
-};
+export default function RedFlags({ flags }: RedFlagsProps) {
+  const { t } = useLocale();
 
-function confidenceBadge(confidence: RedFlag["confidence"]) {
-  const styles = {
+  const confidenceStyles = {
     high: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-    medium:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+    medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
     low: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
   };
 
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[confidence]}`}
-    >
-      {confidenceLabels[confidence]}
-    </span>
-  );
-}
-
-export default function RedFlags({ flags }: RedFlagsProps) {
   if (!flags?.length) {
-    return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-900/20">
-        <h3 className="font-semibold text-green-800 dark:text-green-300">
-          未检测到红旗
-        </h3>
-        <p className="mt-1 text-sm text-green-600 dark:text-green-400">
-          在各平台未发现反复出现的负面问题。
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-900/20">
       <h3 className="mb-4 font-semibold text-red-800 dark:text-red-300">
-        红旗预警
+        {t("redFlags")}
       </h3>
       <ul className="space-y-3">
         {flags.map((flag, i) => (
@@ -55,10 +34,12 @@ export default function RedFlags({ flags }: RedFlagsProps) {
                 <span className="font-medium text-zinc-900 dark:text-zinc-100">
                   {flag.issue}
                 </span>
-                {confidenceBadge(flag.confidence)}
+                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${confidenceStyles[flag.confidence]}`}>
+                  {t(flag.confidence)}
+                </span>
               </div>
               <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                在 {flag.sources.join("、")} 中被提及 {flag.mentions} 次
+                {t("sources")}: {flag.sources.join(", ")} · {flag.mentions} {t("mentions")}
               </p>
             </div>
           </li>

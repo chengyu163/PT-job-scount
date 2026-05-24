@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { aggregateData } from "@/lib/scrapers";
 import { analyzeCompany } from "@/lib/ai/analyze";
 import { prisma } from "@/lib/db";
+import { Locale } from "@/lib/i18n";
 
 const CACHE_DAYS = 7;
 
@@ -14,17 +15,20 @@ function slugify(name: string): string {
 
 export async function GET(request: NextRequest) {
   const companyName = request.nextUrl.searchParams.get("company");
+  const lang = (request.nextUrl.searchParams.get("lang") || "en") as Locale;
+
   if (!companyName) {
     return NextResponse.json({ error: "Missing company name" }, { status: 400 });
   }
 
   const slug = slugify(companyName);
 
-  // Check database for recent report
+  // Check database for recent report in this language
   const existing = await prisma.report.findFirst({
     where: {
       company: { slug },
       expiresAt: { gt: new Date() },
+      aiSummary: { startsWith: `[${lang}]` },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -51,8 +55,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // AI analysis
-  const report = await analyzeCompany(companyName, scrapedData);
+  // AI analysis in requested language
+  const report = await analyzeCompany(companyName, scrapedData, lang);
 
   // Store in database
   const company = await prisma.company.upsert({
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
       interviewDifficulty: report.interview?.difficulty ?? null,
       cultureKeywords: report.culture?.positiveKeywords ?? [],
       redFlags: report.redFlags?.map((f) => f.issue) ?? [],
-      aiSummary: report.summary ?? "",
+      aiSummary: `[${lang}] ${report.summary ?? ""}`,
       fullReport: report as object,
       expiresAt: new Date(Date.now() + CACHE_DAYS * 24 * 60 * 60 * 1000),
     },

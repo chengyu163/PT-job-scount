@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ScrapedData, CompanyReport } from "../types";
 import { buildAnalysisPrompt } from "./prompts";
 import { getMockReport } from "./mock";
+import { Locale } from "../i18n";
 
 function extractJson(text: string): string {
   let start = -1;
@@ -25,7 +26,8 @@ function extractJson(text: string): string {
 
 export async function analyzeCompany(
   companyName: string,
-  data: ScrapedData[]
+  data: ScrapedData[],
+  locale: Locale = "en"
 ): Promise<CompanyReport> {
   if (!process.env.GEMINI_API_KEY) {
     return getMockReport(companyName);
@@ -33,7 +35,7 @@ export async function analyzeCompany(
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const prompt = buildAnalysisPrompt(companyName, data);
+    const prompt = buildAnalysisPrompt(companyName, data, locale);
     const model = genAI.getGenerativeModel({ model: "gemma-4-31b-it" });
 
     const result = await model.generateContent(prompt);

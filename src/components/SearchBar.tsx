@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "./LocaleProvider";
 
 interface Suggestion {
   name: string;
@@ -16,8 +17,8 @@ export default function SearchBar() {
   const [loading, setLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const dropdownRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { locale, t } = useLocale();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -55,7 +56,7 @@ export default function SearchBar() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
-    router.push(`/company/${slug}?name=${encodeURIComponent(name)}`);
+    router.push(`/company/${slug}?name=${encodeURIComponent(name)}&lang=${locale}`);
   }
 
   function handleSubmit(e: FormEvent) {
@@ -85,7 +86,6 @@ export default function SearchBar() {
     <form onSubmit={handleSubmit} className="relative w-full max-w-xl" ref={dropdownRef}>
       <div className="relative">
         <input
-          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => {
@@ -95,7 +95,7 @@ export default function SearchBar() {
           }}
           onFocus={() => setShowDropdown(true)}
           onKeyDown={handleKeyDown}
-          placeholder="输入公司名称..."
+          placeholder={t("searchPlaceholder")}
           className="w-full rounded-full border border-zinc-300 bg-white px-6 py-4 text-lg shadow-sm outline-none transition-shadow focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:ring-blue-800"
           disabled={loading}
           autoComplete="off"
@@ -105,7 +105,7 @@ export default function SearchBar() {
           disabled={loading || !query.trim()}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "搜索中..." : "开始调查"}
+          {loading ? t("searching") : t("searchButton")}
         </button>
       </div>
 
@@ -128,7 +128,7 @@ export default function SearchBar() {
               </span>
               {s.hasReport && (
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  已有报告
+                  {t("hasReport")}
                 </span>
               )}
             </li>

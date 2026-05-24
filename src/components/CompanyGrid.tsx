@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale } from "./LocaleProvider";
 
 interface Company {
   name: string;
@@ -11,6 +12,7 @@ interface Company {
 
 export default function CompanyGrid() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const { locale, t } = useLocale();
 
   useEffect(() => {
     fetch("/api/companies")
@@ -29,20 +31,20 @@ export default function CompanyGrid() {
       {withReport.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            已分析的公司
+            {t("analyzedCompanies")}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {withReport.map((c) => (
               <Link
                 key={c.slug}
-                href={`/company/${c.slug}?name=${encodeURIComponent(c.name)}`}
+                href={`/company/${c.slug}?name=${encodeURIComponent(c.name)}&lang=${locale}`}
                 className="group rounded-lg border border-zinc-200 bg-white px-4 py-3 text-center transition-all hover:border-blue-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-600"
               >
                 <span className="text-sm font-medium text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">
                   {c.name}
                 </span>
                 <span className="mt-1 block text-xs text-green-600 dark:text-green-400">
-                  报告已就绪
+                  {t("reportReady")}
                 </span>
               </Link>
             ))}
@@ -53,13 +55,13 @@ export default function CompanyGrid() {
       {popular.length > 0 && (
         <section>
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            热门公司
+            {t("popularCompanies")}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {popular.map((c) => (
               <Link
                 key={c.slug}
-                href={`/company/${c.slug}?name=${encodeURIComponent(c.name)}`}
+                href={`/company/${c.slug}?name=${encodeURIComponent(c.name)}&lang=${locale}`}
                 className="group rounded-lg border border-zinc-200 bg-white px-4 py-3 text-center transition-all hover:border-blue-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-600"
               >
                 <span className="text-sm font-medium text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">
