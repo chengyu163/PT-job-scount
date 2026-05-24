@@ -253,6 +253,26 @@ export async function scrapeTeamlyzer(
       });
     }
 
+    // Extract salary data from salary pages
+    const salaries: { role: string; department: string; min: number; max: number; currency: string }[] = [];
+    for (const html of salaryPages) {
+      const salaryText = cheerio.load(html)("body").text();
+      const salaryPattern = /([A-Za-zÀ-ú\s,]+?)\s+(\d+)\s*salários?\s*publicados?\s*([\d.,]+)\s*€\s*-\s*([\d.,]+)\s*€\s*Salário médio[^]*?min\s*max\s*([\d.,]+)\s*€\s*([\d.,]+)\s*€/g;
+      let m;
+      while ((m = salaryPattern.exec(salaryText)) !== null) {
+        const role = m[1].trim().replace(/\n/g, " ").replace(/\s+/g, " ");
+        const parts = role.split(/\s{2,}/);
+        const cleanRole = parts[parts.length - 1] || role;
+        salaries.push({
+          role: cleanRole,
+          department: "IT",
+          min: Math.round(parseFloat(m[5].replace(/\./g, "").replace(",", ".")) * 12),
+          max: Math.round(parseFloat(m[6].replace(/\./g, "").replace(",", ".")) * 12),
+          currency: "EUR",
+        });
+      }
+    }
+
     // Company info
     const companyText = $("body").text();
     const sizeMatch = companyText.match(/([\d,.]+-[\d,.]+|[\d,.]+)\s*(colaboradores|employees)/i)
@@ -273,6 +293,7 @@ export async function scrapeTeamlyzer(
         salary: (ratings.salary || 0) / 10,
       },
       reviews,
+      salaries,
       interviews,
       jobs:
         [...new Set(allTech)].length > 0
