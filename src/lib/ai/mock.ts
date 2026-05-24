@@ -59,6 +59,17 @@ export function getMockReport(companyName: string): CompanyReport {
         mentions: 2,
       },
     ],
+    openPositions: [
+      { title: "Senior Software Engineer", source: "indeed", location: "Lisboa", remote: false, salaryRange: "€45,000 - €65,000" },
+      { title: "Product Manager", source: "linkedin", location: "Lisboa", remote: true, salaryRange: "€40,000 - €55,000" },
+    ],
+    hiringTrends: {
+      isHiring: true,
+      totalOpenings: 5,
+      topRoles: ["Software Engineer", "Product Manager", "Data Analyst"],
+      techDemand: ["React", "Python", "AWS"],
+      notes: "Active hiring across engineering and product teams.",
+    },
     greenFlags: [
       "Strong engineering culture",
       "Regular team events and offsites",

@@ -72,6 +72,12 @@ const translations = {
     yes: "是",
     no: "否",
     unknown: "未知",
+    hiringTrends: "招聘趋势",
+    activelyHiring: "正在招聘",
+    totalOpenings: "开放岗位数",
+    topRoles: "热门岗位",
+    techDemand: "技术需求",
+    openPositions: "在招职位",
   },
   en: {
     siteTitle: "Job Scout Portugal",
@@ -138,6 +144,12 @@ const translations = {
     yes: "Yes",
     no: "No",
     unknown: "Unknown",
+    hiringTrends: "Hiring Trends",
+    activelyHiring: "Actively Hiring",
+    totalOpenings: "Open Positions",
+    topRoles: "Top Roles",
+    techDemand: "Tech Demand",
+    openPositions: "Open Positions",
   },
   pt: {
     siteTitle: "Job Scout Portugal",
@@ -204,6 +216,12 @@ const translations = {
     yes: "Sim",
     no: "Não",
     unknown: "Desconhecido",
+    hiringTrends: "Tendências de Contratação",
+    activelyHiring: "A Contratar",
+    totalOpenings: "Vagas Abertas",
+    topRoles: "Cargos em Destaque",
+    techDemand: "Tecnologias Procuradas",
+    openPositions: "Vagas Abertas",
   },
 } as const;
 

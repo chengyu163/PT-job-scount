@@ -50,6 +50,22 @@ ${JSON.stringify(data, null, 2)}
     "commonQuestions": ["..."],
     "avgDuration": "2 weeks"
   },
+  "openPositions": [
+    {
+      "title": "Senior Software Engineer",
+      "source": "indeed",
+      "location": "Lisboa",
+      "remote": false,
+      "salaryRange": "€50,000 - €70,000"
+    }
+  ],
+  "hiringTrends": {
+    "isHiring": true,
+    "totalOpenings": 5,
+    "topRoles": ["Software Engineer", "Product Manager"],
+    "techDemand": ["React", "Java", "AWS"],
+    "notes": "..."
+  },
   "redFlags": [
     {
       "issue": "...",
@@ -83,7 +99,9 @@ Rules:
 - Detect suspicious review patterns (many 5-star reviews in short period, generic language)
 - Foreigner-friendly assessment: extract from review text mentions of visa, English, international team, relocation
 - Salary ranges should be annual gross in EUR
-- IMPORTANT: Write ALL text content (summary, recommendation, redFlags issues, greenFlags, culture keywords, interview process, foreignerFriendly notes, reviewAuthenticity notes) in ${lang}
+- openPositions: list all unique job openings found across sources, with estimated salary if available
+- hiringTrends: analyze job data to determine hiring activity, most demanded roles and technologies
+- IMPORTANT: Write ALL text content (summary, recommendation, redFlags issues, greenFlags, culture keywords, interview process, foreignerFriendly notes, reviewAuthenticity notes, hiringTrends notes, openPositions salaryRange) in ${lang}
 - Score should reflect the overall picture, not just ratings
 - Return ONLY valid JSON, no markdown code fences`;
 }

@@ -101,6 +101,20 @@ export interface CompanyReport {
     commonQuestions: string[];
     avgDuration: string | null;
   };
+  openPositions: {
+    title: string;
+    source: string;
+    location: string;
+    remote: boolean;
+    salaryRange: string;
+  }[];
+  hiringTrends: {
+    isHiring: boolean;
+    totalOpenings: number;
+    topRoles: string[];
+    techDemand: string[];
+    notes: string;
+  };
   redFlags: RedFlag[];
   greenFlags: string[];
   foreignerFriendly: ForeignerFriendly | null;

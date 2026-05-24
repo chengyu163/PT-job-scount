@@ -5,6 +5,7 @@ import ScoreGauge from "./ScoreGauge";
 import SalaryRange from "./SalaryRange";
 import RedFlags from "./RedFlags";
 import ForeignerScore from "./ForeignerScore";
+import OpenPositions from "./OpenPositions";
 import { useLocale } from "./LocaleProvider";
 
 interface ReportCardProps {
@@ -67,6 +68,12 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         it={report.salary.it}
         business={report.salary.business}
         currency={report.salary.currency}
+      />
+
+      {/* Jobs & Hiring */}
+      <OpenPositions
+        positions={report.openPositions}
+        trends={report.hiringTrends}
       />
 
       <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
