@@ -1,0 +1,30 @@
+import { ScrapedData } from "../types";
+import { scrapeTeamlyzer } from "./teamlyzer";
+import { scrapeGlassdoor } from "./glassdoor";
+import { scrapeLinkedIn } from "./linkedin";
+import { scrapeItjobs } from "./itjobs";
+
+export async function aggregateData(
+  companyName: string
+): Promise<ScrapedData[]> {
+  const scrapers = [
+    { name: "teamlyzer", fn: () => scrapeTeamlyzer(companyName) },
+    { name: "glassdoor", fn: () => scrapeGlassdoor(companyName) },
+    { name: "linkedin", fn: () => scrapeLinkedIn(companyName) },
+    { name: "itjobs", fn: () => scrapeItjobs(companyName) },
+  ];
+
+  const results = await Promise.allSettled(scrapers.map((s) => s.fn()));
+
+  const data: ScrapedData[] = [];
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      data.push(result.value);
+    } else {
+      console.error(`Scraper ${scrapers[i].name} failed:`, result.reason);
+      data.push({ source: scrapers[i].name });
+    }
+  });
+
+  return data;
+}

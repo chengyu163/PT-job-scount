@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  teamlyzerUrl String?
+  glassdoorUrl String?
+  linkedinUrl  String?
+  itjobsUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  reports      Report[]
+  rawData      RawData[]
+}
+
+model Report {
+  id                  String   @id @default(cuid())
+  companyId           String
+  company             Company  @relation(fields: [companyId], references: [id])
+  overallScore        Float
+  salaryMin           Int?
+  salaryMax           Int?
+  interviewDifficulty Float?
+  cultureKeywords     String[]
+  redFlags            String[]
+  aiSummary           String
+  fullReport          Json
+  createdAt           DateTime @default(now())
+  expiresAt           DateTime
+
+  @@index([companyId, createdAt])
+}
+
+model RawData {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  source    String
+  data      Json
+  scrapedAt DateTime @default(now())
+
+  @@index([companyId, source])
+}
