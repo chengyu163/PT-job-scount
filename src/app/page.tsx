@@ -1,8 +1,9 @@
 import SearchBar from "@/components/SearchBar";
+import CompanyGrid from "@/components/CompanyGrid";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="flex min-h-screen flex-col items-center px-4 pt-24">
       <div className="mb-12 text-center">
         <h1 className="text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           Job Scout Portugal
@@ -16,6 +17,8 @@ export default function Home() {
       </div>
 
       <SearchBar />
+
+      <CompanyGrid />
 
       <div className="mt-16 grid max-w-2xl grid-cols-1 gap-8 text-center sm:grid-cols-3">
         <div>
