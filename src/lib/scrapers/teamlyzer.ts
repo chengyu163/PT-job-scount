@@ -254,7 +254,7 @@ export async function scrapeTeamlyzer(
     }
 
     // Company info
-    const companyText = $.text();
+    const companyText = $("body").text();
     const sizeMatch = companyText.match(/([\d,.]+-[\d,.]+|[\d,.]+)\s*(colaboradores|employees)/i)
       || companyText.match(/(\d[\d,.]+\s*-\s*\d[\d,.]+)/);
 

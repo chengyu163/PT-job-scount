@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateData } from "@/lib/scrapers";
 import { analyzeCompany } from "@/lib/ai/analyze";
-import { getCachedReport, setCachedReport } from "@/lib/cache";
+import { prisma } from "@/lib/db";
+
+const CACHE_DAYS = 7;
 
 function slugify(name: string): string {
   return name
@@ -18,11 +20,20 @@ export async function GET(request: NextRequest) {
 
   const slug = slugify(companyName);
 
-  const cached = await getCachedReport(slug);
-  if (cached) {
-    return NextResponse.json({ report: cached, cached: true });
+  // Check database for recent report
+  const existing = await prisma.report.findFirst({
+    where: {
+      company: { slug },
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (existing) {
+    return NextResponse.json({ report: existing.fullReport, cached: true });
   }
 
+  // Scrape fresh data
   const scrapedData = await aggregateData(companyName);
 
   const hasData = scrapedData.some(
@@ -40,8 +51,38 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // AI analysis
   const report = await analyzeCompany(companyName, scrapedData);
-  await setCachedReport(slug, report);
+
+  // Store in database
+  const company = await prisma.company.upsert({
+    where: { slug },
+    create: { name: companyName, slug },
+    update: { name: companyName, updatedAt: new Date() },
+  });
+
+  await prisma.rawData.createMany({
+    data: scrapedData.map((d) => ({
+      companyId: company.id,
+      source: d.source,
+      data: d as object,
+    })),
+  });
+
+  await prisma.report.create({
+    data: {
+      companyId: company.id,
+      overallScore: report.overallScore ?? 0,
+      salaryMin: report.salary?.it?.mid?.min ?? null,
+      salaryMax: report.salary?.it?.senior?.max ?? null,
+      interviewDifficulty: report.interview?.difficulty ?? null,
+      cultureKeywords: report.culture?.positiveKeywords ?? [],
+      redFlags: report.redFlags?.map((f) => f.issue) ?? [],
+      aiSummary: report.summary ?? "",
+      fullReport: report as object,
+      expiresAt: new Date(Date.now() + CACHE_DAYS * 24 * 60 * 60 * 1000),
+    },
+  });
 
   return NextResponse.json({ report, cached: false });
 }

@@ -1,21 +1,27 @@
 import * as cheerio from "cheerio";
-import { getBrowser } from "./browser";
+import { getStealthBrowser } from "./browser";
 import { ScrapedData } from "../types";
 
 export async function scrapeIndeed(
   companyName: string
 ): Promise<ScrapedData> {
   try {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
+    const browser = await getStealthBrowser();
+    const context = await browser.newContext({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+      locale: "pt-PT",
+      timezoneId: "Europe/Lisbon",
+    });
+    const page = await context.newPage();
 
-    // Search for company reviews on Indeed Portugal
-    const searchUrl = `https://pt.indeed.com/cmp/${encodeURIComponent(companyName.toLowerCase().replace(/\s+/g, "-"))}/reviews`;
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await page.waitForTimeout(2000);
+    const slug = companyName.toLowerCase().replace(/\s+/g, "-");
+    const searchUrl = `https://pt.indeed.com/cmp/${slug}/reviews`;
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForTimeout(4000);
 
     const html = await page.content();
     await page.close();
+    await context.close();
 
     const $ = cheerio.load(html);
 
