@@ -17,7 +17,7 @@ export default function CompanyPage() {
 
   useEffect(() => {
     if (!companyName) {
-      setError("No company name provided");
+      setError("未提供公司名称");
       setLoading(false);
       return;
     }
@@ -30,13 +30,13 @@ export default function CompanyPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error || "Failed to generate report");
+          setError(data.error || "报告生成失败");
           return;
         }
 
         setReport(data.report);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError("出现错误，请重试。");
       } finally {
         setLoading(false);
       }
@@ -53,12 +53,12 @@ export default function CompanyPage() {
             href="/"
             className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
-            &larr; Back to search
+            &larr; 返回搜索
           </Link>
         </nav>
         <div className="py-8">
           <p className="mb-4 text-center text-sm text-zinc-500">
-            Scouting {companyName}... This may take up to 30 seconds.
+            正在调查 {companyName}... 最多需要 30 秒
           </p>
           <SkeletonReport />
         </div>
@@ -70,14 +70,14 @@ export default function CompanyPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          Could not generate report
+          无法生成报告
         </h1>
         <p className="mt-2 text-zinc-500">{error}</p>
         <Link
           href="/"
           className="mt-6 rounded-full bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
         >
-          Try another company
+          换一家公司试试
         </Link>
       </div>
     );
@@ -92,7 +92,7 @@ export default function CompanyPage() {
           href="/"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          &larr; Back to search
+          &larr; 返回搜索
         </Link>
       </nav>
       <ReportCard companyName={companyName} report={report} />

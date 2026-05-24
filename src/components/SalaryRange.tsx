@@ -7,7 +7,7 @@ interface SalaryRangeProps {
 }
 
 function formatSalary(value: number, currency: string): string {
-  return new Intl.NumberFormat("en-EU", {
+  return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
@@ -27,7 +27,7 @@ function SalaryRow({
     return (
       <tr>
         <td className="py-2 pr-4 text-sm text-zinc-500">{label}</td>
-        <td className="py-2 text-sm text-zinc-400">No data</td>
+        <td className="py-2 text-sm text-zinc-400">暂无数据</td>
       </tr>
     );
   }
@@ -61,9 +61,9 @@ function SalaryTable({
       </h4>
       <table className="w-full">
         <tbody>
-          <SalaryRow label="Junior" range={data.junior} currency={currency} />
-          <SalaryRow label="Mid-level" range={data.mid} currency={currency} />
-          <SalaryRow label="Senior" range={data.senior} currency={currency} />
+          <SalaryRow label="初级" range={data.junior} currency={currency} />
+          <SalaryRow label="中级" range={data.mid} currency={currency} />
+          <SalaryRow label="高级" range={data.senior} currency={currency} />
         </tbody>
       </table>
     </div>
@@ -79,11 +79,9 @@ export default function SalaryRange({
     return (
       <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
         <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-          Salary Ranges
+          薪资范围
         </h3>
-        <p className="mt-2 text-sm text-zinc-500">
-          No salary data available.
-        </p>
+        <p className="mt-2 text-sm text-zinc-500">暂无薪资数据。</p>
       </div>
     );
   }
@@ -91,12 +89,12 @@ export default function SalaryRange({
   return (
     <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
       <h3 className="mb-4 font-semibold text-zinc-900 dark:text-zinc-100">
-        Salary Ranges (Annual Gross)
+        薪资范围（年薪税前）
       </h3>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {it && <SalaryTable title="IT / Tech" data={it} currency={currency} />}
+        {it && <SalaryTable title="IT / 技术" data={it} currency={currency} />}
         {business && (
-          <SalaryTable title="Business" data={business} currency={currency} />
+          <SalaryTable title="商科" data={business} currency={currency} />
         )}
       </div>
     </div>

@@ -14,7 +14,7 @@ interface ReportCardProps {
 export default function ReportCard({ companyName, report }: ReportCardProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
-      {/* Header */}
+      {/* 头部 */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
           {companyName}
@@ -26,38 +26,38 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
           <p className="mt-1 text-sm text-zinc-500">
             {report.companyOverview.industry}
             {report.companyOverview.size &&
-              ` · ${report.companyOverview.size} employees`}
+              ` · ${report.companyOverview.size} 人`}
             {report.companyOverview.founded &&
-              ` · Founded ${report.companyOverview.founded}`}
+              ` · 成立于 ${report.companyOverview.founded}`}
           </p>
         )}
       </div>
 
-      {/* Score Cards */}
+      {/* 评分卡片 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <ScoreGauge score={report.overallScore} label="Overall Score" />
+        <ScoreGauge score={report.overallScore} label="综合评分" />
         {report.culture.workLifeBalance !== null && (
           <ScoreGauge
             score={report.culture.workLifeBalance}
-            label="Work-Life Balance"
+            label="工作生活平衡"
           />
         )}
         {report.interview.difficulty !== null && (
           <ScoreGauge
             score={report.interview.difficulty}
-            label="Interview Difficulty"
+            label="面试难度"
           />
         )}
       </div>
 
-      {/* Tech Stack */}
-      {report.companyOverview.techStack.length > 0 && (
+      {/* 技术栈 */}
+      {report.companyOverview.techStack?.length > 0 && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            Tech Stack
+            技术栈
           </h3>
           <div className="flex flex-wrap gap-2">
-            {report.companyOverview.techStack.map((tech) => (
+            {report.companyOverview.techStack?.map((tech) => (
               <span
                 key={tech}
                 className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
@@ -69,23 +69,23 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* Salary */}
+      {/* 薪资 */}
       <SalaryRange
         it={report.salary.it}
         business={report.salary.business}
         currency={report.salary.currency}
       />
 
-      {/* Culture */}
+      {/* 工作文化 */}
       <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
         <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-          Work Culture
+          工作文化
         </h3>
-        {report.culture.positiveKeywords.length > 0 && (
+        {report.culture.positiveKeywords?.length > 0 && (
           <div className="mb-3">
-            <p className="mb-1 text-sm text-zinc-500">Positives</p>
+            <p className="mb-1 text-sm text-zinc-500">正面评价</p>
             <div className="flex flex-wrap gap-2">
-              {report.culture.positiveKeywords.map((kw) => (
+              {report.culture.positiveKeywords?.map((kw) => (
                 <span
                   key={kw}
                   className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-800 dark:bg-green-900/40 dark:text-green-300"
@@ -96,11 +96,11 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
             </div>
           </div>
         )}
-        {report.culture.negativeKeywords.length > 0 && (
+        {report.culture.negativeKeywords?.length > 0 && (
           <div>
-            <p className="mb-1 text-sm text-zinc-500">Concerns</p>
+            <p className="mb-1 text-sm text-zinc-500">负面评价</p>
             <div className="flex flex-wrap gap-2">
-              {report.culture.negativeKeywords.map((kw) => (
+              {report.culture.negativeKeywords?.map((kw) => (
                 <span
                   key={kw}
                   className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-800 dark:bg-red-900/40 dark:text-red-300"
@@ -113,17 +113,17 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         )}
       </div>
 
-      {/* Red Flags */}
+      {/* 红旗 */}
       <RedFlags flags={report.redFlags} />
 
-      {/* Green Flags */}
-      {report.greenFlags.length > 0 && (
+      {/* 绿旗 */}
+      {report.greenFlags?.length > 0 && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-900/20">
           <h3 className="mb-3 font-semibold text-green-800 dark:text-green-300">
-            Green Flags
+            加分项
           </h3>
           <ul className="space-y-1">
-            {report.greenFlags.map((flag, i) => (
+            {report.greenFlags?.map((flag, i) => (
               <li
                 key={i}
                 className="text-sm text-green-700 dark:text-green-400"
@@ -135,27 +135,27 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* Interview */}
+      {/* 面试 */}
       {report.interview.process && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <h3 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            Interview Process
+            面试流程
           </h3>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
             {report.interview.process}
           </p>
           {report.interview.avgDuration && (
             <p className="mt-2 text-sm text-zinc-500">
-              Average duration: {report.interview.avgDuration}
+              平均周期：{report.interview.avgDuration}
             </p>
           )}
-          {report.interview.commonQuestions.length > 0 && (
+          {report.interview.commonQuestions?.length > 0 && (
             <div className="mt-3">
               <p className="mb-1 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Common Questions
+                常见面试问题
               </p>
               <ul className="list-inside list-disc space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {report.interview.commonQuestions.map((q, i) => (
+                {report.interview.commonQuestions?.map((q, i) => (
                   <li key={i}>{q}</li>
                 ))}
               </ul>
@@ -164,36 +164,36 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
         </div>
       )}
 
-      {/* Foreigner Friendly */}
+      {/* 外国人友好度 */}
       {report.foreignerFriendly && (
         <ForeignerScore data={report.foreignerFriendly} />
       )}
 
-      {/* Review Authenticity */}
+      {/* 评价可信度 */}
       {report.reviewAuthenticity && (
         <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-              Review Authenticity
+              评价可信度
             </h3>
             <span className="text-lg font-bold text-zinc-700 dark:text-zinc-300">
               {report.reviewAuthenticity.score}/10
             </span>
           </div>
           <p className="mt-2 text-sm text-zinc-500">
-            Based on {report.reviewAuthenticity.totalReviews} reviews.{" "}
+            基于 {report.reviewAuthenticity.totalReviews} 条评价。
             {report.reviewAuthenticity.suspiciousPatterns
-              ? "Suspicious patterns detected."
-              : "No suspicious patterns."}{" "}
+              ? "检测到可疑刷评模式。"
+              : "未发现可疑模式。"}
             {report.reviewAuthenticity.notes}
           </p>
         </div>
       )}
 
-      {/* Recommendation */}
+      {/* AI 建议 */}
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-6 dark:border-blue-900 dark:bg-blue-900/20">
         <h3 className="mb-2 font-semibold text-blue-800 dark:text-blue-300">
-          AI Recommendation
+          AI 综合建议
         </h3>
         <p className="text-blue-900 dark:text-blue-200">
           {report.recommendation}

@@ -1,45 +1,66 @@
-import * as cheerio from "cheerio";
+import { getBrowser } from "./browser";
 import { ScrapedData } from "../types";
 
 export async function scrapeLinkedIn(
   companyName: string
 ): Promise<ScrapedData> {
-  const searchUrl = `https://www.linkedin.com/company/${encodeURIComponent(companyName.toLowerCase().replace(/\s+/g, "-"))}`;
+  const slug = companyName.toLowerCase().replace(/\s+/g, "-");
 
-  const page = await fetch(searchUrl, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-    },
-    redirect: "follow",
-  }).then((r) => r.text());
+  try {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
+    await page.goto(`https://www.linkedin.com/company/${slug}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await page.waitForTimeout(2000);
 
-  const $ = cheerio.load(page);
+    const data = await page.evaluate(() => {
+      const description =
+        document.querySelector('meta[name="description"]')
+          ?.getAttribute("content") || "";
 
-  const size = $(".org-about-company-module__company-size-definition-text")
-    .text()
-    .trim();
-  const industry = $(".org-top-card-summary__industry").text().trim();
-  const founded = $(".org-about-company-module__founded").text().trim();
+      const allText = document.body.textContent || "";
+      const sizeMatch = allText.match(/(\d[\d,]+)\s*(?:employees|funcionários|seguidores)/i);
+      const industryEl = document.querySelector('[class*="industry"]');
 
-  const jobs = $(".base-card--link")
-    .map((_, el) => ({
-      title: $(el).find(".base-search-card__title").text().trim(),
-      department: "",
-      remote:
-        $(el).find(".job-search-card__location").text().toLowerCase().includes("remote"),
-      url: $(el).find("a").attr("href") || "",
-    }))
-    .get();
+      const jobs: any[] = [];
+      document.querySelectorAll(".base-card--link, [class*=job-card]").forEach((el) => {
+        const title = el.querySelector("[class*=title]")?.textContent?.trim() || "";
+        const location = el.querySelector("[class*=location]")?.textContent?.trim() || "";
+        const url = el.querySelector("a")?.getAttribute("href") || "";
+        if (title) {
+          jobs.push({
+            title,
+            department: "",
+            remote: location.toLowerCase().includes("remote"),
+            url,
+          });
+        }
+      });
 
-  return {
-    source: "linkedin",
-    sector: "all",
-    companyInfo: {
-      size: size || "",
-      founded: founded || "",
-      industry: industry || "",
-    },
-    jobs,
-  };
+      return {
+        description,
+        size: sizeMatch ? sizeMatch[1] : "",
+        industry: industryEl?.textContent?.trim() || "",
+        jobs: jobs.slice(0, 10),
+      };
+    });
+
+    await page.close();
+
+    return {
+      source: "linkedin",
+      sector: "all",
+      companyInfo: {
+        size: data.size,
+        founded: "",
+        industry: data.industry,
+      },
+      jobs: data.jobs,
+    };
+  } catch (error) {
+    console.error("LinkedIn scrape failed:", error);
+    return { source: "linkedin", sector: "all" };
+  }
 }

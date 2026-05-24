@@ -8,10 +8,10 @@ export default function Home() {
           Job Scout Portugal
         </h1>
         <p className="mt-4 text-xl text-zinc-500 dark:text-zinc-400">
-          Know before you sign
+          签约之前，先看清楚
         </p>
         <p className="mt-2 text-sm text-zinc-400 dark:text-zinc-500">
-          AI-powered company intelligence for the Portuguese job market
+          AI 驱动的葡萄牙公司情报工具，覆盖 IT 与商科领域
         </p>
       </div>
 
@@ -21,28 +21,28 @@ export default function Home() {
         <div>
           <div className="mb-2 text-3xl">&#128270;</div>
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-            Multi-Platform Data
+            多平台数据聚合
           </h3>
           <p className="mt-1 text-sm text-zinc-500">
-            Aggregates Teamlyzer, Glassdoor, LinkedIn, and more
+            整合 Teamlyzer、Glassdoor、LinkedIn 等多个平台
           </p>
         </div>
         <div>
           <div className="mb-2 text-3xl">&#9888;&#65039;</div>
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-            Red Flag Detection
+            红旗交叉检测
           </h3>
           <p className="mt-1 text-sm text-zinc-500">
-            AI cross-validates issues across platforms
+            AI 跨平台交叉验证，识别反复出现的问题
           </p>
         </div>
         <div>
           <div className="mb-2 text-3xl">&#127757;</div>
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-            Foreigner Friendly
+            外国人友好度
           </h3>
           <p className="mt-1 text-sm text-zinc-500">
-            Visa support, English environment, relocation info
+            签证支持、英语环境、搬迁补助一目了然
           </p>
         </div>
       </div>

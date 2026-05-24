@@ -31,7 +31,7 @@ export default function ScoreGauge({
         {label}
       </p>
       <p className={`mt-1 text-4xl font-bold ${getScoreColor(score, maxScore)}`}>
-        {score.toFixed(1)}
+        {(score ?? 0).toFixed(1)}
         <span className="text-lg font-normal text-zinc-400">/{maxScore}</span>
       </p>
     </div>

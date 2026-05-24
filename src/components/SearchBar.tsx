@@ -28,7 +28,7 @@ export default function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter a company name..."
+          placeholder="输入公司名称..."
           className="w-full rounded-full border border-zinc-300 bg-white px-6 py-4 text-lg shadow-sm outline-none transition-shadow focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:ring-blue-800"
           disabled={loading}
         />
@@ -37,7 +37,7 @@ export default function SearchBar() {
           disabled={loading || !query.trim()}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Searching..." : "Scout"}
+          {loading ? "搜索中..." : "开始调查"}
         </button>
       </div>
     </form>

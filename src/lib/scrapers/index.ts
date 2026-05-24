@@ -3,6 +3,8 @@ import { scrapeTeamlyzer } from "./teamlyzer";
 import { scrapeGlassdoor } from "./glassdoor";
 import { scrapeLinkedIn } from "./linkedin";
 import { scrapeItjobs } from "./itjobs";
+import { scrapeIndeed } from "./indeed";
+import { closeBrowser } from "./browser";
 
 export async function aggregateData(
   companyName: string
@@ -12,9 +14,11 @@ export async function aggregateData(
     { name: "glassdoor", fn: () => scrapeGlassdoor(companyName) },
     { name: "linkedin", fn: () => scrapeLinkedIn(companyName) },
     { name: "itjobs", fn: () => scrapeItjobs(companyName) },
+    { name: "indeed", fn: () => scrapeIndeed(companyName) },
   ];
 
   const results = await Promise.allSettled(scrapers.map((s) => s.fn()));
+  await closeBrowser();
 
   const data: ScrapedData[] = [];
   results.forEach((result, i) => {

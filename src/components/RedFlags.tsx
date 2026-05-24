@@ -4,6 +4,12 @@ interface RedFlagsProps {
   flags: RedFlag[];
 }
 
+const confidenceLabels = {
+  high: "高",
+  medium: "中",
+  low: "低",
+};
+
 function confidenceBadge(confidence: RedFlag["confidence"]) {
   const styles = {
     high: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
@@ -16,20 +22,20 @@ function confidenceBadge(confidence: RedFlag["confidence"]) {
     <span
       className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${styles[confidence]}`}
     >
-      {confidence}
+      {confidenceLabels[confidence]}
     </span>
   );
 }
 
 export default function RedFlags({ flags }: RedFlagsProps) {
-  if (!flags.length) {
+  if (!flags?.length) {
     return (
       <div className="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-900/20">
         <h3 className="font-semibold text-green-800 dark:text-green-300">
-          No Red Flags Detected
+          未检测到红旗
         </h3>
         <p className="mt-1 text-sm text-green-600 dark:text-green-400">
-          No recurring negative patterns found across platforms.
+          在各平台未发现反复出现的负面问题。
         </p>
       </div>
     );
@@ -38,7 +44,7 @@ export default function RedFlags({ flags }: RedFlagsProps) {
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-900/20">
       <h3 className="mb-4 font-semibold text-red-800 dark:text-red-300">
-        Red Flags
+        红旗预警
       </h3>
       <ul className="space-y-3">
         {flags.map((flag, i) => (
@@ -52,8 +58,7 @@ export default function RedFlags({ flags }: RedFlagsProps) {
                 {confidenceBadge(flag.confidence)}
               </div>
               <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                Mentioned {flag.mentions} times across{" "}
-                {flag.sources.join(", ")}
+                在 {flag.sources.join("、")} 中被提及 {flag.mentions} 次
               </p>
             </div>
           </li>
