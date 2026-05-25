@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     libcups2 \
     libxss1 \
+    tor \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,4 +35,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-CMD ["npm", "start"]
+CMD tor & sleep 3 && npm start

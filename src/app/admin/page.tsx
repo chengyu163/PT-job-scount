@@ -156,7 +156,7 @@ export default function AdminPage() {
 
       // Delay between companies to avoid rate limiting
       if (!abortRef.current && i < queue.length - 1) {
-        await new Promise((r) => setTimeout(r, 5000));
+        await new Promise((r) => setTimeout(r, 15000));
       }
     }
 

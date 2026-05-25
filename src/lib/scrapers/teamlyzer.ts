@@ -1,25 +1,72 @@
 import * as cheerio from "cheerio";
-import { getBrowser } from "./browser";
+import { getBrowser, applyStealthScripts } from "./browser";
 import { ScrapedData } from "../types";
 
 const BASE_URL = "https://pt.teamlyzer.com";
+const SCRAPER_API_URL = "https://api.scraperapi.com";
 
 function randomDelay(): number {
-  return 2000 + Math.floor(Math.random() * 3000);
+  return 5000 + Math.floor(Math.random() * 7000);
 }
 
 import type { BrowserContext } from "playwright";
 let authContext: BrowserContext | null = null;
 
+const USER_AGENTS = [
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+];
+
+const VIEWPORTS = [
+  { width: 1920, height: 1080 },
+  { width: 1440, height: 900 },
+  { width: 1536, height: 864 },
+  { width: 1366, height: 768 },
+];
+
+let lastScraperApiCall = 0;
+
+async function fetchViaScraperApi(url: string): Promise<string> {
+  const apiKey = process.env.SCRAPER_API_KEY;
+  if (!apiKey) throw new Error("SCRAPER_API_KEY not set");
+
+  const now = Date.now();
+  const elapsed = now - lastScraperApiCall;
+  if (elapsed < 3000) {
+    await new Promise((r) => setTimeout(r, 3000 - elapsed + Math.random() * 2000));
+  }
+
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    url,
+    render: "true",
+    country_code: "pt",
+  });
+  const res = await fetch(`${SCRAPER_API_URL}?${params}`, { signal: AbortSignal.timeout(90000) });
+  lastScraperApiCall = Date.now();
+  if (!res.ok) throw new Error(`ScraperAPI ${res.status}`);
+  return res.text();
+}
+
 async function getAuthContext(): Promise<BrowserContext> {
   if (authContext) return authContext;
 
   const browser = await getBrowser();
+  const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+  const vp = VIEWPORTS[Math.floor(Math.random() * VIEWPORTS.length)];
   authContext = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    userAgent: ua,
+    viewport: vp,
     locale: "pt-PT",
     timezoneId: "Europe/Lisbon",
+    extraHTTPHeaders: {
+      "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.8",
+      "Sec-Ch-Ua-Platform": ua.includes("Mac") ? '"macOS"' : ua.includes("Windows") ? '"Windows"' : '"Linux"',
+    },
   });
+  await applyStealthScripts(authContext);
 
   const email = process.env.TEAMLYZER_EMAIL;
   const password = process.env.TEAMLYZER_PASSWORD;
@@ -45,7 +92,7 @@ async function getAuthContext(): Promise<BrowserContext> {
   return authContext;
 }
 
-async function fetchPage(url: string): Promise<string> {
+async function fetchPageViaPlaywright(url: string): Promise<string> {
   const context = await getAuthContext();
   const page = await context.newPage();
   await page.waitForTimeout(randomDelay());
@@ -54,6 +101,13 @@ async function fetchPage(url: string): Promise<string> {
   const html = await page.content();
   await page.close();
   return html;
+}
+
+async function fetchPage(url: string): Promise<string> {
+  if (process.env.SCRAPER_API_KEY) {
+    return fetchViaScraperApi(url);
+  }
+  return fetchPageViaPlaywright(url);
 }
 
 async function fetchAllPages(baseUrl: string, maxPages = 10): Promise<string[]> {
@@ -71,11 +125,10 @@ async function fetchAllPages(baseUrl: string, maxPages = 10): Promise<string[]> 
   if (totalPages <= 1) return [firstHtml];
 
   const sep = baseUrl.includes("?") ? "&" : "?";
-  const remaining = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, i) =>
-      fetchPage(`${baseUrl}${sep}page=${i + 2}`)
-    )
-  );
+  const remaining: string[] = [];
+  for (let i = 2; i <= totalPages; i++) {
+    remaining.push(await fetchPage(`${baseUrl}${sep}page=${i}`));
+  }
 
   return [firstHtml, ...remaining];
 }
@@ -161,21 +214,18 @@ export async function scrapeTeamlyzer(
     // Fetch main page
     const mainHtml = await fetchPage(`${BASE_URL}/companies/${slug}`);
 
-    // Fetch review list pages
-    const [workPages, interviewPages, salaryPages] = await Promise.all([
-      fetchAllPages(`${BASE_URL}/companies/${slug}/work-reviews`),
-      fetchAllPages(`${BASE_URL}/companies/${slug}/interview-reviews`),
-      fetchAllPages(`${BASE_URL}/companies/${slug}/salary-reviews`),
-    ]);
+    // Fetch review list pages sequentially to avoid burst requests
+    const workPages = await fetchAllPages(`${BASE_URL}/companies/${slug}/work-reviews`);
+    const interviewPages = await fetchAllPages(`${BASE_URL}/companies/${slug}/interview-reviews`);
+    const salaryPages = await fetchAllPages(`${BASE_URL}/companies/${slug}/salary-reviews`);
 
     // Get individual review links and fetch details (limit to 10 for speed)
     const workLinks = extractReviewLinks(workPages).slice(0, 10);
-    const detailedReviews = await Promise.all(
-      workLinks.map(async (url) => {
-        const html = await fetchPage(url);
-        return extractDetailedReview(html);
-      })
-    );
+    const detailedReviews: (ReturnType<typeof extractDetailedReview>)[] = [];
+    for (const url of workLinks) {
+      const html = await fetchPage(url);
+      detailedReviews.push(extractDetailedReview(html));
+    }
 
     const $ = cheerio.load(mainHtml);
 

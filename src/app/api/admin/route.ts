@@ -5,7 +5,7 @@ import { analyzeCompany } from "@/lib/ai/analyze";
 import { closeBrowser } from "@/lib/scrapers/browser";
 import { Locale } from "@/lib/i18n";
 
-const CACHE_DAYS = 7;
+const CACHE_DAYS = 30;
 
 function slugify(name: string): string {
   return name
