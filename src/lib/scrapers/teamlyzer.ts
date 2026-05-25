@@ -9,13 +9,13 @@ function randomDelay(): number {
 }
 
 import type { BrowserContext } from "playwright";
-let loggedInContext: BrowserContext | null = null;
+let authContext: BrowserContext | null = null;
 
-async function getLoggedInContext(): Promise<BrowserContext> {
-  if (loggedInContext) return loggedInContext;
+async function getAuthContext(): Promise<BrowserContext> {
+  if (authContext) return authContext;
 
   const browser = await getBrowser();
-  const context = await browser.newContext({
+  authContext = await browser.newContext({
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     locale: "pt-PT",
     timezoneId: "Europe/Lisbon",
@@ -26,26 +26,27 @@ async function getLoggedInContext(): Promise<BrowserContext> {
 
   if (email && password) {
     try {
-      const page = await context.newPage();
-      await page.goto(`${BASE_URL}/login`, { waitUntil: "domcontentloaded", timeout: 20000 });
-      await page.waitForTimeout(randomDelay());
-      await page.fill('input[name="email"], input[type="email"]', email);
-      await page.fill('input[name="password"], input[type="password"]', password);
-      await page.click('button[type="submit"], input[type="submit"]');
+      const page = await authContext.newPage();
+      await page.goto(`${BASE_URL}/auth/login`, { waitUntil: "domcontentloaded", timeout: 20000 });
+      await page.waitForTimeout(2000);
+      await page.fill("input#email", email);
+      await page.fill("input#password", password);
+      await page.check("input#remember_me");
+      await page.click("input#submit");
       await page.waitForTimeout(4000);
-      console.log("[teamlyzer] Logged in successfully");
+      const loggedIn = !page.url().includes("/auth/login");
+      console.log("[teamlyzer] Login:", loggedIn ? "success" : "failed");
       await page.close();
     } catch (e) {
-      console.error("[teamlyzer] Login failed:", e);
+      console.error("[teamlyzer] Login error:", e);
     }
   }
 
-  loggedInContext = context;
-  return context;
+  return authContext;
 }
 
 async function fetchPage(url: string): Promise<string> {
-  const context = await getLoggedInContext();
+  const context = await getAuthContext();
   const page = await context.newPage();
   await page.waitForTimeout(randomDelay());
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
@@ -326,9 +327,9 @@ export async function scrapeTeamlyzer(
     console.error("Teamlyzer scrape failed:", error);
     return { source: "teamlyzer", sector: "it" };
   } finally {
-    if (loggedInContext) {
-      try { await loggedInContext.close(); } catch {}
-      loggedInContext = null;
+    if (authContext) {
+      try { await authContext.close(); } catch {}
+      authContext = null;
     }
   }
 }
