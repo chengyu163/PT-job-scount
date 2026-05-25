@@ -146,8 +146,7 @@ export interface CompanyReport {
     industry: string | null;
   };
   salary: {
-    it: SalaryByLevel | null;
-    business: SalaryByLevel | null;
+    roles: { role: string; min: number; max: number; source: string }[];
     currency: string;
   };
   culture: {

@@ -80,8 +80,8 @@ export async function GET(request: NextRequest) {
     data: {
       companyId: company.id,
       overallScore: report.overallScore ?? 0,
-      salaryMin: report.salary?.it?.mid?.min ?? null,
-      salaryMax: report.salary?.it?.senior?.max ?? null,
+      salaryMin: report.salary?.roles?.[0]?.min ?? null,
+      salaryMax: report.salary?.roles?.[0]?.max ?? null,
       interviewDifficulty: report.interview?.difficulty ?? null,
       cultureKeywords: report.culture?.positiveKeywords ?? [],
       redFlags: report.redFlags?.map((f) => f.issue) ?? [],

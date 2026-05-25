@@ -65,8 +65,7 @@ export default function ReportCard({ companyName, report }: ReportCardProps) {
       )}
 
       <SalaryRange
-        it={report.salary.it}
-        business={report.salary.business}
+        roles={report.salary.roles}
         currency={report.salary.currency}
       />
 

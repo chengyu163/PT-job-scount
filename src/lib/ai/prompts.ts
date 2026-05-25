@@ -26,16 +26,9 @@ ${JSON.stringify(data, null, 2)}
     "industry": "..."
   },
   "salary": {
-    "it": {
-      "junior": { "min": 0, "max": 0 },
-      "mid": { "min": 0, "max": 0 },
-      "senior": { "min": 0, "max": 0 }
-    },
-    "business": {
-      "junior": { "min": 0, "max": 0 },
-      "mid": { "min": 0, "max": 0 },
-      "senior": { "min": 0, "max": 0 }
-    },
+    "roles": [
+      { "role": "Software Engineer", "min": 35000, "max": 55000, "source": "teamlyzer" }
+    ],
     "currency": "EUR"
   },
   "culture": {
@@ -98,7 +91,7 @@ Rules:
 - Red flags: cross-validate across platforms. Only mark "high confidence" if mentioned by 2+ sources
 - Detect suspicious review patterns (many 5-star reviews in short period, generic language)
 - Foreigner-friendly assessment: extract from review text mentions of visa, English, international team, relocation
-- Salary ranges should be annual gross in EUR
+- salary.roles: ONLY include roles with actual salary data from the scraped sources. Do NOT estimate or infer salaries. Each entry must have the source it came from. Annual gross in EUR
 - openPositions: list all unique job openings found across sources, with estimated salary if available
 - hiringTrends: analyze job data to determine hiring activity, most demanded roles and technologies
 - IMPORTANT: Write ALL text content (summary, recommendation, redFlags issues, greenFlags, culture keywords, interview process, foreignerFriendly notes, reviewAuthenticity notes, hiringTrends notes, openPositions salaryRange) in ${lang}

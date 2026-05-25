@@ -11,16 +11,11 @@ export function getMockReport(companyName: string): CompanyReport {
       industry: "Technology / Internet Services",
     },
     salary: {
-      it: {
-        junior: { min: 18000, max: 25000 },
-        mid: { min: 28000, max: 40000 },
-        senior: { min: 42000, max: 60000 },
-      },
-      business: {
-        junior: { min: 16000, max: 22000 },
-        mid: { min: 25000, max: 35000 },
-        senior: { min: 38000, max: 55000 },
-      },
+      roles: [
+        { role: "Software Engineer", min: 28000, max: 40000, source: "teamlyzer" },
+        { role: "Senior Software Engineer", min: 42000, max: 60000, source: "indeed" },
+        { role: "Product Manager", min: 35000, max: 50000, source: "teamlyzer" },
+      ],
       currency: "EUR",
     },
     culture: {
