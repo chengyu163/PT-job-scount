@@ -1,5 +1,31 @@
-import { getBrowser } from "./browser";
+import * as cheerio from "cheerio";
 import { ScrapedData } from "../types";
+
+const PORTUGAL_GEO_ID = "100364837";
+
+async function fetchLinkedIn(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`LinkedIn ${res.status}`);
+  return res.text();
+}
+
+function extractJobTitleFromUrl(url: string): string {
+  const decoded = decodeURIComponent(url);
+  const match = decoded.match(/\/jobs\/view\/(.+?)(?:-at-|-\d)/);
+  if (!match) return "";
+  return match[1]
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export async function scrapeLinkedIn(
   companyName: string
@@ -7,57 +33,64 @@ export async function scrapeLinkedIn(
   const slug = companyName.toLowerCase().replace(/\s+/g, "-");
 
   try {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-    await page.goto(`https://www.linkedin.com/company/${slug}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
+    const [companyHtml, jobsHtml] = await Promise.all([
+      fetchLinkedIn(`https://www.linkedin.com/company/${slug}`),
+      fetchLinkedIn(
+        `https://www.linkedin.com/jobs/search/?f_C=&keywords=${encodeURIComponent(companyName)}&location=Portugal&geoId=${PORTUGAL_GEO_ID}`
+      ),
+    ]);
+
+    const $company = cheerio.load(companyHtml);
+    const description =
+      $company('meta[name="description"]').attr("content") || "";
+    const allText = $company("body").text();
+    const sizeMatch = allText.match(
+      /(\d[\d,]+)\s*(?:employees|funcionários|seguidores)/i
+    );
+
+    const $jobs = cheerio.load(jobsHtml);
+    const jobs: { title: string; department: string; remote: boolean; url: string }[] = [];
+    const seen = new Set<string>();
+
+    const slugVariants = [
+      slug,
+      slug.replace(/-/g, ""),
+      companyName.toLowerCase().replace(/\s+/g, ""),
+    ];
+
+    $jobs('a[href*="/jobs/view/"]').each((_, el) => {
+      const href = $jobs(el).attr("href") || "";
+      const cleanUrl = href.split("?")[0];
+      if (seen.has(cleanUrl)) return;
+      seen.add(cleanUrl);
+
+      const decodedHref = decodeURIComponent(href).toLowerCase();
+      const isCompanyJob = slugVariants.some((v) => decodedHref.includes(`-at-${v}`));
+      if (!isCompanyJob) return;
+
+      const title = extractJobTitleFromUrl(href);
+      const location = $jobs(el).closest(".base-card, [class*=card]")
+        .find("[class*=location]").text().trim();
+
+      if (title) {
+        jobs.push({
+          title,
+          department: "",
+          remote: location.toLowerCase().includes("remote"),
+          url: cleanUrl,
+        });
+      }
     });
-    await page.waitForTimeout(2000);
-
-    const data = await page.evaluate(() => {
-      const description =
-        document.querySelector('meta[name="description"]')
-          ?.getAttribute("content") || "";
-
-      const allText = document.body.textContent || "";
-      const sizeMatch = allText.match(/(\d[\d,]+)\s*(?:employees|funcionários|seguidores)/i);
-      const industryEl = document.querySelector('[class*="industry"]');
-
-      const jobs: any[] = [];
-      document.querySelectorAll(".base-card--link, [class*=job-card]").forEach((el) => {
-        const title = el.querySelector("[class*=title]")?.textContent?.trim() || "";
-        const location = el.querySelector("[class*=location]")?.textContent?.trim() || "";
-        const url = el.querySelector("a")?.getAttribute("href") || "";
-        if (title) {
-          jobs.push({
-            title,
-            department: "",
-            remote: location.toLowerCase().includes("remote"),
-            url,
-          });
-        }
-      });
-
-      return {
-        description,
-        size: sizeMatch ? sizeMatch[1] : "",
-        industry: industryEl?.textContent?.trim() || "",
-        jobs: jobs.slice(0, 10),
-      };
-    });
-
-    await page.close();
 
     return {
       source: "linkedin",
       sector: "all",
       companyInfo: {
-        size: data.size,
+        size: sizeMatch ? sizeMatch[1] : "",
         founded: "",
-        industry: data.industry,
+        industry: "",
       },
-      jobs: data.jobs,
+      jobs,
     };
   } catch (error) {
     console.error("LinkedIn scrape failed:", error);
